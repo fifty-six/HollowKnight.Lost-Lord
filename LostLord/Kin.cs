@@ -42,7 +42,7 @@ namespace LostLord
         private void Start()
         {
 
-            ModHooks.Instance.ObjectPoolSpawnHook += HelpMe;
+            ModHooks.Instance.ObjectPoolSpawnHook += Projectile;
             
             Log("Added Kin MonoBehaviour");
             
@@ -131,24 +131,15 @@ namespace LostLord
 
         }
 
-        private bool did;
-
-        private GameObject HelpMe(GameObject go)
+        private static GameObject Projectile(GameObject go)
         {
             if (go.name != "IK Projectile DS(Clone)" && go.name != "Parasite Balloon Spawner(Clone)") return go;
 
             foreach (DamageHero i in go.GetComponentsInChildren<DamageHero>(true))
             {
-                Log("yo");
                 i.damageDealt = 2;
             }
 
-            if (!did)
-            {
-                go.PrintSceneHierarchyTree("yeet");
-                did = true;
-            }
-            
             return go;
         }
 
@@ -162,14 +153,9 @@ namespace LostLord
             _phase2 = true;
         }
 
-        private void Log(object obj)
+        private static void Log(object obj)
         {
             Logger.Log("Lost Lord " + obj);
-        }
-
-        private void Log(string str)
-        {
-            Logger.Log("[Lost Lord] " + str);
         }
     }
 }
