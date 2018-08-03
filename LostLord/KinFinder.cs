@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using ModCommon;
-using Modding;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 using Logger = Modding.Logger;
 
 namespace LostLord
@@ -13,7 +6,7 @@ namespace LostLord
     internal class KinFinder : MonoBehaviour
     {
         private GameObject _kin;
-        
+
         private void Start()
         {
             Logger.Log("[Lost Lord] Added KinFinder MonoBehaviour");

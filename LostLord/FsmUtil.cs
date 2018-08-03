@@ -153,13 +153,25 @@ namespace LostLord
             }
         }
 
-        public static void RemoveTransitions(PlayMakerFSM fsm, List<string> states, List<string> transitions)
+        public static void RemoveTransitions(PlayMakerFSM fsm, IEnumerable<string> states, IEnumerable<string> transitions)
+        {
+            IEnumerable<string> enumerable = states as string[] ?? states.ToArray();
+            
+            foreach (FsmState t in fsm.FsmStates)
+            {
+                if (!enumerable.Contains(t.Name)) continue;
+
+                t.Transitions = t.Transitions.Where(trans => !transitions.Contains(trans.ToState)).ToArray();
+            }
+        }
+        
+        public static void RemoveTransition(PlayMakerFSM fsm, string state, string transition)
         {
             foreach (FsmState t in fsm.FsmStates)
             {
-                if (!states.Contains(t.Name)) continue;
+                if (state != t.Name) continue;
 
-                t.Transitions = t.Transitions.Where(trans => !transitions.Contains(trans.ToState)).ToArray();
+                t.Transitions = t.Transitions.Where(trans => transition != trans.ToState).ToArray();
             }
         }
 
@@ -305,8 +317,11 @@ namespace LostLord
         public static void AddTransition(this PlayMakerFSM fsm, string stateName, string eventName, string toState) =>
             FsmUtil.AddTransition(fsm, stateName, eventName, toState);
 
-        public static void RemoveTransitions(this PlayMakerFSM fsm, List<string> states, List<string> transitions) =>
+        public static void RemoveTransitions(this PlayMakerFSM fsm, IEnumerable<string> states, IEnumerable<string> transitions) =>
             FsmUtil.RemoveTransitions(fsm, states, transitions);
+        
+        public static void RemoveTransition(this PlayMakerFSM fsm, string state, string transition) =>
+            FsmUtil.RemoveTransition(fsm, state, transition);
 
         public static void ReplaceStringVariable(this PlayMakerFSM fsm, List<string> states,
             Dictionary<string, string> dict) => FsmUtil.ReplaceStringVariable(fsm, states, dict);

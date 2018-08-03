@@ -17,16 +17,22 @@ namespace LostLord
             ["Dash Antic 1"] = 30,
             ["Dash Antic 2"] = 30,
             ["Dash Antic 3"] = 30,
+            ["Dash Attack 1"] = 30,
+            ["Dash Attack 2"] = 45,
+            ["Dash Attack 3"] = 25,
             ["Jump Antic"] = 30,
             ["Jump"] = 60,
             ["Downstab"] = 24,
-            ["Downstab Antic"] = 50,
+            ["Downstab Antic"] = 56,
             ["Downstab Land"] = 30,
             ["Downstab Slam"] = 30,
             ["Land"] = 60,
             ["Overhead Slash"] = 20,
             ["Overhead Slashing"] = 20,
-            ["Overhead Antic"] = 30,
+            ["Overhead Antic"] = 34,
+            ["Roar Start"] = 20,
+            ["Roar Loop"] = 20,
+            ["Roar End"] = 20,
         };
         
         private HealthManager _hm;
@@ -41,8 +47,9 @@ namespace LostLord
 
         private void Start()
         {
-
             ModHooks.Instance.ObjectPoolSpawnHook += Projectile;
+            
+            HeroController.instance.AddMPChargeSpa(999);
             
             Log("Added Kin MonoBehaviour");
             
@@ -126,6 +133,18 @@ namespace LostLord
             _control.ChangeTransition("Ohead Antic", "FINISHED", "Spawn Ohead");
             _control.ChangeTransition("Spawn Ohead", "FINISHED", "Ohead Slashing");
             _control.FsmVariables.GetFsmFloat("Evade Range").Value *= 2;
+            
+            // Experimental?
+            // More attack variety hopefully.
+            _control.RemoveTransition("Idle", "Took Damage");
+            
+            // Dstab => Upslash
+            _control.CopyState("Ohead Slashing", "Ohead Combo 2");
+            _control.ChangeTransition("Dstab Land", "FINISHED", "Ohead Combo 2");
+            _control.ChangeTransition("Ohead Combo 2", "FINISHED", "Dstab Recover");
+            
+            // Aerial Dash => Dstab
+            _control.ChangeTransition("Dash Recover", "FALL", "Dstab Antic");
 
             Log("fin.");
 
@@ -143,19 +162,9 @@ namespace LostLord
             return go;
         }
 
-        private bool _phase2;
-        
-        private void Update()
-        {
-            if (_hm.hp > 1500 / 2 || _phase2) return;
-            _balloons.ChangeTransition("Spawn Pause", "SPAWN", "Spawn");
-            _balloons.SetState("Spawn");
-            _phase2 = true;
-        }
-
         private static void Log(object obj)
         {
-            Logger.Log("Lost Lord " + obj);
+            Logger.Log("[Lost Lord] " + obj);
         }
     }
 }
