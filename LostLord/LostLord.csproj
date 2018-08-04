@@ -55,7 +55,6 @@
     <Compile Include="FsmUtil.cs" />
     <Compile Include="Kin.cs" />
     <Compile Include="KinFinder.cs" />
-    <Compile Include="LordSettings.cs" />
     <Compile Include="LostLord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

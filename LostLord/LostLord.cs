@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using Modding;
+using UnityEngine.SceneManagement;
 using UObject = UnityEngine.Object;
 
 // ReSharper disable Unity.NoNullPropogation
@@ -10,11 +11,12 @@ using UObject = UnityEngine.Object;
 namespace LostLord
 {
     // ReSharper disable once UnusedMember.Global
-    public class LostLord : Mod<LordSettings, VoidModSettings>, ITogglableMod
+    public class LostLord : Mod, ITogglableMod
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once NotAccessedField.Global
         public LostLord Instance;
+        
         private const string LOST_KIN_VAR = "infectedKnightDreamDefeated";
 
         public override string GetVersion()
@@ -30,27 +32,21 @@ namespace LostLord
             ModHooks.Instance.AfterSavegameLoadHook += AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook += AddComponent;
             ModHooks.Instance.GetPlayerBoolHook += GetBoolHandler;
-            ModHooks.Instance.SetPlayerBoolHook += SetBoolHandler;
+            ModHooks.Instance.LanguageGetHook += LangGet;
         }
 
-        private void SetBoolHandler(string set, bool val)
+        private static bool GetBoolHandler(string get)
         {
-            if (set == LOST_KIN_VAR && val && PlayerData.instance.infectedKnightDreamDefeated)
-            {
-                Settings.DefeatedLord = true;
-            }
-            PlayerData.instance.SetBoolInternal(set, val);
+            return get != LOST_KIN_VAR && PlayerData.instance.GetBoolInternal(get);
         }
-
-        private bool GetBoolHandler(string get)
+        
+        private static string LangGet(string key, string sheettitle)
         {
-            if (get == LOST_KIN_VAR)
-            {
-                return PlayerData.instance.infectedKnightDreamDefeated && Settings.DefeatedLord;
-            }
-            return PlayerData.instance.GetBoolInternal(get);
+            return key == "INFECTED_KNIGHT_DREAM_MAIN" && PlayerData.instance.infectedKnightDreamDefeated
+                ? "Lord"
+                : Language.Language.GetInternal(key, sheettitle);
         }
-
+        
         private static void AfterSaveGameLoad(SaveGameData data) => AddComponent();
 
         private static void AddComponent()
@@ -62,6 +58,8 @@ namespace LostLord
         {
             ModHooks.Instance.AfterSavegameLoadHook -= AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook -= AddComponent;
+            ModHooks.Instance.GetPlayerBoolHook -= GetBoolHandler;
+            ModHooks.Instance.LanguageGetHook -= LangGet;
 
             KinFinder x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
             if (x == null) return;
