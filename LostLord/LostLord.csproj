@@ -11,6 +11,7 @@
     <AssemblyName>LostLord</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,10 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\HollowKnight.Modding\Assembly-CSharp\bin\Debug\MONOMODDED_Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\ModCommon.dll</HintPath>
+      <HintPath>..\..\Lightbringer\Lightbringer\bin\Debug\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\PlayMaker.dll</HintPath>
@@ -57,6 +55,7 @@
     <Compile Include="FsmUtil.cs" />
     <Compile Include="Kin.cs" />
     <Compile Include="KinFinder.cs" />
+    <Compile Include="LordSettings.cs" />
     <Compile Include="LostLord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
