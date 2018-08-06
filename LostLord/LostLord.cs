@@ -1,22 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
+using JetBrains.Annotations;
 using Modding;
-using UnityEngine.SceneManagement;
 using UObject = UnityEngine.Object;
-
-// ReSharper disable Unity.NoNullPropogation
-
 
 namespace LostLord
 {
-    // ReSharper disable once UnusedMember.Global
+    [UsedImplicitly]
     public class LostLord : Mod, ITogglableMod
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once NotAccessedField.Global
         public LostLord Instance;
-        
+
         private const string LOST_KIN_VAR = "infectedKnightDreamDefeated";
 
         public override string GetVersion()
@@ -39,14 +35,14 @@ namespace LostLord
         {
             return get != LOST_KIN_VAR && PlayerData.instance.GetBoolInternal(get);
         }
-        
+
         private static string LangGet(string key, string sheettitle)
         {
             return key == "INFECTED_KNIGHT_DREAM_MAIN" && PlayerData.instance.infectedKnightDreamDefeated
                 ? "Lord"
                 : Language.Language.GetInternal(key, sheettitle);
         }
-        
+
         private static void AfterSaveGameLoad(SaveGameData data) => AddComponent();
 
         private static void AddComponent()
@@ -61,6 +57,7 @@ namespace LostLord
             ModHooks.Instance.GetPlayerBoolHook -= GetBoolHandler;
             ModHooks.Instance.LanguageGetHook -= LangGet;
 
+            // ReSharper disable once Unity.NoNullPropogation
             KinFinder x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
             if (x == null) return;
             UObject.Destroy(x);

@@ -14,6 +14,8 @@ namespace LostLord
 
         private void Update()
         {
+            if (!PlayerData.instance.infectedKnightDreamDefeated) return;
+            
             if (_kin != null) return;
             _kin = GameObject.Find("Lost Kin");
             if (_kin == null) return;

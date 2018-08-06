@@ -4,7 +4,9 @@ using System.Linq;
 using System.Reflection;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Modding;
+using LostLord;
+using UnityEngine;
+using Logger = Modding.Logger;
 
 // Taken and modified from
 // https://raw.githubusercontent.com/KayDeeTee/HK-NGG/master/src/
@@ -109,7 +111,7 @@ namespace LostLord
                 t.Actions = actions;
             }
         }
-        
+
         public static void InsertAction(PlayMakerFSM fsm, string stateName, FsmStateAction action, int index)
         {
             foreach (FsmState t in fsm.FsmStates)
@@ -153,10 +155,11 @@ namespace LostLord
             }
         }
 
-        public static void RemoveTransitions(PlayMakerFSM fsm, IEnumerable<string> states, IEnumerable<string> transitions)
+        public static void RemoveTransitions(PlayMakerFSM fsm, IEnumerable<string> states,
+            IEnumerable<string> transitions)
         {
             IEnumerable<string> enumerable = states as string[] ?? states.ToArray();
-            
+
             foreach (FsmState t in fsm.FsmStates)
             {
                 if (!enumerable.Contains(t.Name)) continue;
@@ -164,7 +167,7 @@ namespace LostLord
                 t.Transitions = t.Transitions.Where(trans => !transitions.Contains(trans.ToState)).ToArray();
             }
         }
-        
+
         public static void RemoveTransition(PlayMakerFSM fsm, string state, string transition)
         {
             foreach (FsmState t in fsm.FsmStates)
@@ -292,7 +295,7 @@ namespace LostLord
 
         public static void InsertAction(this PlayMakerFSM fsm, string stateName, FsmStateAction action, int index) =>
             FsmUtil.InsertAction(fsm, stateName, action, index);
-        
+
         public static void RemoveAction(this PlayMakerFSM fsm, string stateName, int index) =>
             FsmUtil.RemoveAction(fsm, stateName, index);
 
@@ -317,9 +320,10 @@ namespace LostLord
         public static void AddTransition(this PlayMakerFSM fsm, string stateName, string eventName, string toState) =>
             FsmUtil.AddTransition(fsm, stateName, eventName, toState);
 
-        public static void RemoveTransitions(this PlayMakerFSM fsm, IEnumerable<string> states, IEnumerable<string> transitions) =>
+        public static void RemoveTransitions(this PlayMakerFSM fsm, IEnumerable<string> states,
+            IEnumerable<string> transitions) =>
             FsmUtil.RemoveTransitions(fsm, states, transitions);
-        
+
         public static void RemoveTransition(this PlayMakerFSM fsm, string state, string transition) =>
             FsmUtil.RemoveTransition(fsm, state, transition);
 

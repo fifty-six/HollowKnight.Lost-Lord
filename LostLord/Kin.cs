@@ -2,9 +2,10 @@
 using System.Linq;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
+using JetBrains.Annotations;
+using Modding;
 using UnityEngine;
 using Logger = Modding.Logger;
-using ModHooks = Modding.ModHooks;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace LostLord
@@ -21,8 +22,8 @@ namespace LostLord
             ["Dash Attack 3"] = 50,
             ["Jump Antic"] = 30,
             ["Jump"] = 60,
-            ["Downstab"] = 100, //48,
-            ["Downstab Antic"] = 56,
+            ["Downstab"] = 100, 
+            ["Downstab Antic"] = 70,
             ["Downstab Land"] = 30,
             ["Downstab Slam"] = 30,
             ["Land"] = 60,
@@ -31,7 +32,7 @@ namespace LostLord
             ["Overhead Antic"] = 34,
             ["Roar Start"] = 20,
             ["Roar Loop"] = 20,
-            ["Roar End"] = 20,
+            ["Roar End"] = 20
         };
 
         private HealthManager _hm;
@@ -106,11 +107,6 @@ namespace LostLord
             _control.GetAction<SetVelocity2d>("Dstab Fall", 4).y = -200; // -130; // -90
             _control.GetAction<SetVelocity2d>("Dstab Fall", 4).everyFrame = true;
 
-            // Make him jump a little lower
-            RandomFloat jumpRand = _control.GetAction<RandomFloat>("Jump", 3);
-            jumpRand.max = jumpRand.max.Value / 1.2f;
-
-
             // Combo Dash into Upslash followed by Dstab's Projectiles..
             _control.CopyState("Dstab Land", "Spawners");
             _control.CopyState("Ohead Slashing", "Ohead Combo");
@@ -148,9 +144,53 @@ namespace LostLord
             _control.FsmVariables.GetFsmFloat("Dash Speed").Value *= 2;
             _control.FsmVariables.GetFsmFloat("Dash Reverse").Value *= 2;
 
+            // Fixes the cheese where you can sit on the wall
+            // right above where he can jump and then just spam ddark
+            _control.CopyState("Jump", "Cheese Jump");
+            _control.GetAction<Wait>("Cheese Jump", 5).time.Value *= 5;
+            _control.RemoveAction("Cheese Jump", 4);
+            _control.InsertAction("Cheese Jump", new FireAtTarget
+            {
+               gameObject = new FsmOwnerDefault
+               {
+                   GameObject = gameObject
+               },
+               target = HeroController.instance.gameObject,
+               speed = 100f,
+               everyFrame = false,
+               spread = 0f,
+               position = new Vector3(0, 0)
+            }, 4);
+
+            CallMethod cm = new CallMethod
+            {
+                behaviour = this,
+                methodName = "StopCheese",
+                parameters = new FsmVar[0],
+                everyFrame = false
+            };
+
+            foreach (string i in new[] {"Damage Response", "Attack Choice"})
+            {
+                _control.InsertAction(i, cm, 0);
+            }
+            
             Log("fin.");
+
         }
 
+        [UsedImplicitly]
+        public void StopCheese()
+        {
+            float hx = HeroController.instance.gameObject.transform.GetPositionX();
+            float hy = HeroController.instance.gameObject.transform.GetPositionY();
+
+            if (hy > 35 && (15 < hx && hx < 16.6 || 36.55 < hx && hx < 37.8))
+            {
+                _control.SetState("Cheese Jump");
+            }
+        }
+        
         private static GameObject Projectile(GameObject go)
         {
             if (go.name != "IK Projectile DS(Clone)" && go.name != "Parasite Balloon Spawner(Clone)") return go;
@@ -161,6 +201,11 @@ namespace LostLord
             }
 
             return go;
+        }
+
+        private void OnDestroy()
+        {
+            ModHooks.Instance.ObjectPoolSpawnHook -= Projectile;
         }
 
         private static void Log(object obj)
