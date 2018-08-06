@@ -45,30 +45,35 @@ namespace LostLord
         private PlayMakerFSM _balloons;
         private PlayMakerFSM _control;
 
-        private void Start()
+        private void Awake()
         {
-            if (!PlayerData.instance.infectedKnightDreamDefeated) return;
+            Log("Added Kin MonoBehaviour");
             
             ModHooks.Instance.ObjectPoolSpawnHook += Projectile;
-
-            HeroController.instance.AddMPChargeSpa(999);
-
-            Log("Added Kin MonoBehaviour");
-
+            
             _hm = gameObject.GetComponent<HealthManager>();
             _stunControl = gameObject.LocateMyFSM("Stun Control");
             _balloons = gameObject.LocateMyFSM("Spawn Balloon");
             _anim = gameObject.GetComponent<tk2dSpriteAnimator>();
             _control = gameObject.LocateMyFSM("IK Control");
             _recoil = gameObject.GetComponent<Recoil>();
+        }
 
+        private void Start()
+        {
+            if (!PlayerData.instance.infectedKnightDreamDefeated) return;
+            
+            // Refill MP
+            HeroController.instance.AddMPChargeSpa(999);
+
+            // No stunning
             _stunControl.FsmVariables.GetFsmInt("Stuns Total").Value = 999;
 
+            // No balloons
             _balloons.ChangeTransition("Spawn Pause", "SPAWN", "Stop");
 
-            _control.GetAction<WaitRandom>("Idle", 5).timeMax = 0.01f;
-            _control.GetAction<WaitRandom>("Idle", 5).timeMin = 0.001f;
 
+            // 1500hp
             _hm.hp = 1500;
 
             // Disable Knockback
@@ -87,6 +92,10 @@ namespace LostLord
                 _anim.GetClipByName(i.Key).fps = i.Value;
             }
 
+            // Decrease idles
+            _control.GetAction<WaitRandom>("Idle", 5).timeMax = 0.01f;
+            _control.GetAction<WaitRandom>("Idle", 5).timeMin = 0.001f;
+            
             // 2x Damage
             _control.GetAction<SetDamageHeroAmount>("Roar End", 3).damageDealt.Value = 2;
 
