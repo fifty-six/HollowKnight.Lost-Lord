@@ -62,7 +62,7 @@ namespace LostLord
         private void Start()
         {
             if (!PlayerData.instance.infectedKnightDreamDefeated) return;
-            
+
             // Refill MP
             HeroController.instance.AddMPChargeSpa(999);
 

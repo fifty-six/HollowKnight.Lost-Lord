@@ -7,11 +7,11 @@ using UObject = UnityEngine.Object;
 namespace LostLord
 {
     [UsedImplicitly]
-    public class LostLord : Mod, ITogglableMod
+    public class LostLord : Mod<LostSettings>, ITogglableMod
     {
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once NotAccessedField.Global
-        public LostLord Instance;
+        public static LostLord Instance;
 
         private const string LOST_KIN_VAR = "infectedKnightDreamDefeated";
 
@@ -29,7 +29,28 @@ namespace LostLord
             ModHooks.Instance.NewGameHook += AddComponent;
             ModHooks.Instance.GetPlayerBoolHook += GetBoolHandler;
             ModHooks.Instance.LanguageGetHook += LangGet;
+            ModHooks.Instance.SetPlayerBoolHook += SetBoolHandler; 
         }
+        
+        private void SetBoolHandler(string set, bool val)
+        {
+            if (set == LOST_KIN_VAR && val)
+            {
+                // Cause this runs before setting both bools
+                if (!Settings.DefeatedLord)
+                {
+                    PlayerData.instance.dreamOrbs += PlayerData.instance.infectedKnightDreamDefeated ? 800 : 400;
+                    EventRegister.SendEvent("DREAM ORB COLLECT");
+                }
+
+                if (PlayerData.instance.infectedKnightDreamDefeated)
+                {
+                    Settings.DefeatedLord = true;
+                }
+            }
+
+            PlayerData.instance.SetBoolInternal(set, val);
+        } 
 
         private static bool GetBoolHandler(string get)
         {
