@@ -77,6 +77,7 @@ namespace LostLord
             ModHooks.Instance.NewGameHook -= AddComponent;
             ModHooks.Instance.GetPlayerBoolHook -= GetBoolHandler;
             ModHooks.Instance.LanguageGetHook -= LangGet;
+            ModHooks.Instance.SetPlayerBoolHook -= SetBoolHandler; 
 
             // ReSharper disable once Unity.NoNullPropogation
             KinFinder x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
