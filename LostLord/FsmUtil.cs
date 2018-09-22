@@ -4,8 +4,6 @@ using System.Linq;
 using System.Reflection;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using LostLord;
-using UnityEngine;
 using Logger = Modding.Logger;
 
 // Taken and modified from
@@ -85,7 +83,6 @@ namespace LostLord
                 FsmStateAction[] actions = t.Actions;
 
                 Array.Resize(ref actions, actions.Length + 1);
-                Log(actions[index].GetType().ToString());
 
                 return actions[index];
             }
@@ -278,11 +275,37 @@ namespace LostLord
             }
         }
 
+        public static void InsertMethod(PlayMakerFSM fsm, string stateName, int index, Action method)
+        {
+            InsertAction(fsm, stateName, new InvokeMethod(method), index);
+        }
+
         private static void Log(string str)
         {
             Logger.Log("[FSM UTIL]: " + str);
         }
     }
+    
+    ///////////////////////
+    // Method Invocation //
+    ///////////////////////
+
+    public class InvokeMethod : FsmStateAction
+    {
+        private readonly Action _action;
+
+        public InvokeMethod(Action a)
+        {
+            _action = a;
+        }
+        
+        public override void OnEnter()
+        {
+            _action?.Invoke();
+            Finish();
+        }
+    }
+    
 
     ////////////////
     // Extensions //
@@ -316,6 +339,9 @@ namespace LostLord
         public static void
             ChangeTransition(this PlayMakerFSM fsm, string stateName, string eventName, string toState) =>
             FsmUtil.ChangeTransition(fsm, stateName, eventName, toState);
+
+        public static void InsertMethod(this PlayMakerFSM fsm, string stateName, int index, Action method) =>
+            FsmUtil.InsertMethod(fsm, stateName, index, method);
 
         public static void AddTransition(this PlayMakerFSM fsm, string stateName, string eventName, string toState) =>
             FsmUtil.AddTransition(fsm, stateName, eventName, toState);
