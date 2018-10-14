@@ -3,6 +3,7 @@ using System.Linq;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using JetBrains.Annotations;
+using ModCommon.Util;
 using Modding;
 using UnityEngine;
 using Logger = Modding.Logger;
@@ -22,7 +23,7 @@ namespace LostLord
             ["Dash Attack 3"] = 50,
             ["Jump Antic"] = 30,
             ["Jump"] = 60,
-            ["Downstab"] = 100, 
+            ["Downstab"] = 100,
             ["Downstab Antic"] = 70,
             ["Downstab Land"] = 30,
             ["Downstab Slam"] = 30,
@@ -41,33 +42,117 @@ namespace LostLord
 
         private Recoil _recoil;
 
+        private InfectedEnemyEffects _enemyEffects;
+
         private PlayMakerFSM _stunControl;
         private PlayMakerFSM _balloons;
         private PlayMakerFSM _control;
+
+        private static bool _changedKin;
+        
+        private Texture _oldTex;
 
         private void Awake()
         {
             Log("Added Kin MonoBehaviour");
             
+            if (!PlayerData.instance.infectedKnightDreamDefeated) return;
+            if (!LostLord.Instance.IsInHall) return;
+
             ModHooks.Instance.ObjectPoolSpawnHook += Projectile;
-            
+            On.EnemyDeathEffects.EmitInfectedEffects += OnEmitInfected;
+            On.EnemyDeathEffects.EmitEffects += No;
+            On.EnemyDeathEffects.EmitCorpse += EmitCorpse;
+            On.InfectedEnemyEffects.RecieveHitEffect += RecieveHit;
+
             _hm = gameObject.GetComponent<HealthManager>();
             _stunControl = gameObject.LocateMyFSM("Stun Control");
             _balloons = gameObject.LocateMyFSM("Spawn Balloon");
             _anim = gameObject.GetComponent<tk2dSpriteAnimator>();
             _control = gameObject.LocateMyFSM("IK Control");
             _recoil = gameObject.GetComponent<Recoil>();
+            _enemyEffects = gameObject.GetComponent<InfectedEnemyEffects>();
+        }
+
+        private void RecieveHit(On.InfectedEnemyEffects.orig_RecieveHitEffect orig, InfectedEnemyEffects self, float attackdirection)
+        {
+            if (self.GetAttr<bool>("didFireThisFrame"))
+            {
+                return;
+            }
+
+            if (self.GetAttr<SpriteFlash>("spriteFlash") != null)
+            {
+                self.GetAttr<SpriteFlash>("spriteFlash").flashShadeGet();
+            }
+
+            FSMUtility.SendEventToGameObject(gameObject, "DAMAGE FLASH", true);
+            self.GetAttr<AudioEvent>("impactAudio").SpawnAndPlayOneShot(self.GetAttr<AudioSource>("audioSourcePrefab"), self.transform.position);
+            self.SetAttr("didFireThisFrame", true);
+        }
+
+        private static void EmitCorpse(On.EnemyDeathEffects.orig_EmitCorpse orig, EnemyDeathEffects self, float? attackdirection, bool iswatery, bool spellburn)
+        {
+            orig(self, attackdirection, true, true);
+        }
+
+        private static void No(On.EnemyDeathEffects.orig_EmitEffects orig, EnemyDeathEffects self)
+        {
+            // no
+        }
+
+
+        private static void OnEmitInfected(On.EnemyDeathEffects.orig_EmitInfectedEffects orig, EnemyDeathEffects self)
+        {
+            self.EmitSound();
+            if (self.GetAttr<GameObject>("corpse") != null)
+            {
+                var component = self.GetAttr<GameObject>("corpse").GetComponent<SpriteFlash>();
+                if (component != null)
+                {
+                    component.FlashShadowRecharge();
+                    component.flashShadeGet();
+                }
+            }
+
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
         }
 
         private void Start()
         {
             if (!PlayerData.instance.infectedKnightDreamDefeated) return;
+            if (!LostLord.Instance.IsInHall) return;
+
+            if (!_changedKin)
+            {
+                tk2dSpriteDefinition def = gameObject.GetComponent<tk2dSprite>().GetCurrentSpriteDef();
+
+                _oldTex = def.material.mainTexture;
+                
+                def.material.mainTexture = LostLord.SPRITES[0].texture;
+
+                _changedKin = true;
+            }
+
+            // var ps = gameObject.FindGameObjectInChildren("Corpse Steam").GetComponent<ParticleSystemRenderer>();
+            // ps.material.color = Color.black;
+
+            PlayMakerFSM corpse = gameObject.FindGameObjectInChildren("Corpse Infected Knight Dream(Clone)").LocateMyFSM("corpse");
+
+            corpse.RemoveAction("Init", 9);
+            corpse.RemoveAction("Init", 1);
+            corpse.ChangeTransition("Pause", "FINISHED", "BG Open");
+
+            corpse.AddAction("Pause", corpse.GetAction<Tk2dPlayAnimation>("Blow", 9));
 
             // Refill MP
             HeroController.instance.AddMPChargeSpa(999);
 
             // No stunning
-            _stunControl.FsmVariables.GetFsmInt("Stuns Total").Value = 999;
+            Destroy(_stunControl);
+
+            // 🅱lood
+            _enemyEffects.SetAttr("noBlood", true);
 
             // No balloons
             _balloons.ChangeTransition("Spawn Pause", "SPAWN", "Stop");
@@ -95,7 +180,7 @@ namespace LostLord
             // Decrease idles
             _control.GetAction<WaitRandom>("Idle", 5).timeMax = 0.01f;
             _control.GetAction<WaitRandom>("Idle", 5).timeMin = 0.001f;
-            
+
             // 2x Damage
             _control.GetAction<SetDamageHeroAmount>("Roar End", 3).damageDealt.Value = 2;
 
@@ -104,7 +189,7 @@ namespace LostLord
             _control.GetAction<FloatMultiply>("Aim Jump", 3).multiplyBy = 2.2f;
 
             // Decrease walk idles.
-            RandomFloat walk = _control.GetAction<RandomFloat>("Idle", 3);
+            var walk = _control.GetAction<RandomFloat>("Idle", 3);
             walk.min = 0.001f;
             walk.max = 0.01f;
 
@@ -116,7 +201,10 @@ namespace LostLord
             _control.GetAction<SetVelocity2d>("Dstab Fall", 4).y = -200; // -130; // -90
             _control.GetAction<SetVelocity2d>("Dstab Fall", 4).everyFrame = true;
 
-            // Combo Dash into Upslash followed by Dstab's Projectiles..
+            _control.GetAction<ActivateGameObject>("Dstab Land", 2).activate = false;
+            _control.GetAction<ActivateGameObject>("Dstab Fall", 6).activate = false;
+
+            // Combo Dash into Upslash followed by Dstab's Projectiles.
             _control.CopyState("Dstab Land", "Spawners");
             _control.CopyState("Ohead Slashing", "Ohead Combo");
             _control.CopyState("Dstab Recover", "Dstab Recover 2");
@@ -160,18 +248,18 @@ namespace LostLord
             _control.RemoveAction("Cheese Jump", 4);
             _control.InsertAction("Cheese Jump", new FireAtTarget
             {
-               gameObject = new FsmOwnerDefault
-               {
-                   GameObject = gameObject
-               },
-               target = HeroController.instance.gameObject,
-               speed = 100f,
-               everyFrame = false,
-               spread = 0f,
-               position = new Vector3(0, 0)
+                gameObject = new FsmOwnerDefault
+                {
+                    GameObject = gameObject
+                },
+                target = HeroController.instance.gameObject,
+                speed = 100f,
+                everyFrame = false,
+                spread = 0f,
+                position = new Vector3(0, 0)
             }, 4);
 
-            CallMethod cm = new CallMethod
+            var cm = new CallMethod
             {
                 behaviour = this,
                 methodName = "StopCheese",
@@ -183,9 +271,8 @@ namespace LostLord
             {
                 _control.InsertAction(i, cm, 0);
             }
-            
-            Log("fin.");
 
+            Log("fin.");
         }
 
         [UsedImplicitly]
@@ -199,9 +286,11 @@ namespace LostLord
                 _control.SetState("Cheese Jump");
             }
         }
-        
+
         private static GameObject Projectile(GameObject go)
         {
+            if (!PlayerData.instance.infectedKnightDreamDefeated) return go;
+
             if (go.name != "IK Projectile DS(Clone)" && go.name != "Parasite Balloon Spawner(Clone)") return go;
 
             foreach (DamageHero i in go.GetComponentsInChildren<DamageHero>(true))
@@ -209,12 +298,35 @@ namespace LostLord
                 i.damageDealt = 2;
             }
 
+            var psr = go.GetComponentInChildren<ParticleSystemRenderer>();
+
+            var m = new Material(psr.material)
+            {
+                color = Color.black
+            };
+
+            psr.material = m;
+
+            var sr = go.GetComponentInChildren<SpriteRenderer>(true);
+
+            sr.sprite = LostLord.SPRITES[1];
+
             return go;
         }
 
         private void OnDestroy()
         {
             ModHooks.Instance.ObjectPoolSpawnHook -= Projectile;
+            On.EnemyDeathEffects.EmitInfectedEffects -= OnEmitInfected;
+            On.EnemyDeathEffects.EmitEffects -= No;
+            On.EnemyDeathEffects.EmitCorpse -= EmitCorpse;
+            On.InfectedEnemyEffects.RecieveHitEffect -= RecieveHit;
+
+            if (!_changedKin) return;
+            
+            tk2dSpriteDefinition def = gameObject.GetComponent<tk2dSprite>().GetCurrentSpriteDef();
+
+            def.material.mainTexture = _oldTex;
         }
 
         private static void Log(object obj)

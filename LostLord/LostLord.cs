@@ -1,19 +1,26 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using JetBrains.Annotations;
 using Modding;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UObject = UnityEngine.Object;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace LostLord
 {
     [UsedImplicitly]
-    public class LostLord : Mod<LostSettings>, ITogglableMod
+    public class LostLord : Mod, ITogglableMod
     {
-        // ReSharper disable once MemberCanBePrivate.Global
-        // ReSharper disable once NotAccessedField.Global
         public static LostLord Instance;
+        
+        public static readonly IList<Sprite> SPRITES = new List<Sprite>();
+        
+        private string _lastScene;
 
-        private const string LOST_KIN_VAR = "infectedKnightDreamDefeated";
+        internal bool IsInHall => _lastScene == "GG_Workshop";
 
         public override string GetVersion()
         {
@@ -27,39 +34,44 @@ namespace LostLord
             Log("Initalizing.");
             ModHooks.Instance.AfterSavegameLoadHook += AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook += AddComponent;
-            ModHooks.Instance.GetPlayerBoolHook += GetBoolHandler;
             ModHooks.Instance.LanguageGetHook += LangGet;
-            ModHooks.Instance.SetPlayerBoolHook += SetBoolHandler; 
-        }
-        
-        private void SetBoolHandler(string set, bool val)
-        {
-            if (set == LOST_KIN_VAR && val)
+            USceneManager.activeSceneChanged += LastScene;
+            
+            int ind = 0;
+            Assembly asm = Assembly.GetExecutingAssembly();
+            
+            foreach (string res in asm.GetManifestResourceNames())
             {
-                // Cause this runs before setting both bools
-                if (!Settings.DefeatedLord)
+                if (!res.EndsWith(".png"))
                 {
-                    PlayerData.instance.dreamOrbs += PlayerData.instance.infectedKnightDreamDefeated ? 800 : 400;
-                    EventRegister.SendEvent("DREAM ORB COLLECT");
+                    Log("Unknown resource: " + res);
+                    continue;
                 }
 
-                if (PlayerData.instance.infectedKnightDreamDefeated)
+                using (Stream s = asm.GetManifestResourceStream(res))
                 {
-                    Settings.DefeatedLord = true;
+                    if (s == null) continue;
+                    byte[] buffer = new byte[s.Length];
+                    s.Read(buffer, 0, buffer.Length);
+                    s.Dispose();
+
+                    //Create texture from bytes
+                    var tex = new Texture2D(1, 1);
+                    tex.LoadImage(buffer);
+
+                    //Create sprite from texture
+                    SPRITES.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
+
+                    Log("Created sprite from embedded image: " + res + "at ind " + ++ind);
                 }
             }
-
-            PlayerData.instance.SetBoolInternal(set, val);
-        } 
-
-        private static bool GetBoolHandler(string get)
-        {
-            return get != LOST_KIN_VAR && PlayerData.instance.GetBoolInternal(get);
         }
 
-        private static string LangGet(string key, string sheettitle)
+        private void LastScene(Scene arg0, Scene arg1) => _lastScene = arg0.name;
+
+        private string LangGet(string key, string sheettitle)
         {
-            return key == "INFECTED_KNIGHT_DREAM_MAIN" && PlayerData.instance.infectedKnightDreamDefeated
+            return key == "INFECTED_KNIGHT_DREAM_MAIN" && PlayerData.instance.infectedKnightDreamDefeated && IsInHall
                 ? "Lord"
                 : Language.Language.GetInternal(key, sheettitle);
         }
@@ -75,12 +87,11 @@ namespace LostLord
         {
             ModHooks.Instance.AfterSavegameLoadHook -= AfterSaveGameLoad;
             ModHooks.Instance.NewGameHook -= AddComponent;
-            ModHooks.Instance.GetPlayerBoolHook -= GetBoolHandler;
             ModHooks.Instance.LanguageGetHook -= LangGet;
-            ModHooks.Instance.SetPlayerBoolHook -= SetBoolHandler; 
+            USceneManager.activeSceneChanged -= LastScene;
 
             // ReSharper disable once Unity.NoNullPropogation
-            KinFinder x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
+            var x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
             if (x == null) return;
             UObject.Destroy(x);
         }
