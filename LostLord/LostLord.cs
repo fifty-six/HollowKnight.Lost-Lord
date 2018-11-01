@@ -12,12 +12,12 @@ using USceneManager = UnityEngine.SceneManagement.SceneManager;
 namespace LostLord
 {
     [UsedImplicitly]
-    public class LostLord : Mod, ITogglableMod
+    public class LostLord : Mod<VoidModSettings, LordSettings>, ITogglableMod
     {
         public static LostLord Instance;
-        
+
         public static readonly IList<Sprite> SPRITES = new List<Sprite>();
-        
+
         private string _lastScene;
 
         internal bool IsInHall => _lastScene == "GG_Workshop";
@@ -36,9 +36,11 @@ namespace LostLord
             ModHooks.Instance.NewGameHook += AddComponent;
             ModHooks.Instance.LanguageGetHook += LangGet;
             USceneManager.activeSceneChanged += LastScene;
-            
+
             int ind = 0;
             Assembly asm = Assembly.GetExecutingAssembly();
+            
+            LoadGlobalSettings();
             
             foreach (string res in asm.GetManifestResourceNames())
             {
@@ -47,24 +49,47 @@ namespace LostLord
                     Log("Unknown resource: " + res);
                     continue;
                 }
+                
+                bool pureFIle = res.StartsWith("LostLord.pure") || res.StartsWith("LostLord.z");
+                
+                if (!GlobalSettings.Pure && pureFIle)
+                    continue;
+                if (GlobalSettings.Pure && !pureFIle)
+                    continue;
 
                 using (Stream s = asm.GetManifestResourceStream(res))
                 {
                     if (s == null) continue;
+
+                    
                     byte[] buffer = new byte[s.Length];
                     s.Read(buffer, 0, buffer.Length);
                     s.Dispose();
 
-                    //Create texture from bytes
+                    // Create texture from bytes
                     var tex = new Texture2D(1, 1);
                     tex.LoadImage(buffer);
 
-                    //Create sprite from texture
+                    // Create sprite from texture
                     SPRITES.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
 
                     Log("Created sprite from embedded image: " + res + "at ind " + ++ind);
                 }
             }
+        }
+
+        private void SetupSettings()
+        {
+            string settingsFilePath = Application.persistentDataPath + ModHooks.PathSeperator + GetType().Name + ".GlobalSettings.json";
+
+            bool forceReloadGlobalSettings = GlobalSettings != null && GlobalSettings.SettingsVersion != LordSettings.SETTINGS_VER;
+
+            if (forceReloadGlobalSettings || !File.Exists(settingsFilePath))
+            {
+                GlobalSettings?.Reset();
+            }
+
+            SaveGlobalSettings();
         }
 
         private void LastScene(Scene arg0, Scene arg1) => _lastScene = arg0.name;
@@ -76,10 +101,12 @@ namespace LostLord
                 : Language.Language.GetInternal(key, sheettitle);
         }
 
-        private static void AfterSaveGameLoad(SaveGameData data) => AddComponent();
+        private void AfterSaveGameLoad(SaveGameData data) => AddComponent();
 
-        private static void AddComponent()
+        private void AddComponent()
         {
+            SetupSettings();
+
             GameManager.instance.gameObject.AddComponent<KinFinder>();
         }
 

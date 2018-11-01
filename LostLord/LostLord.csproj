@@ -67,6 +67,7 @@
     <Compile Include="FsmUtil.cs" />
     <Compile Include="Kin.cs" />
     <Compile Include="KinFinder.cs" />
+    <Compile Include="LordSettings.cs" />
     <Compile Include="LostLord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -80,6 +81,8 @@
   <ItemGroup>
     <EmbeddedResource Include="kinSprite.png" />
     <EmbeddedResource Include="projSprite.png" />
+    <EmbeddedResource Include="pure.png" />
+      <EmbeddedResource Include="zProjSprite.png" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

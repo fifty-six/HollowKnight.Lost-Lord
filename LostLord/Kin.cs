@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using ModCommon.Util;
 using Modding;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Logger = Modding.Logger;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
@@ -64,6 +65,7 @@ namespace LostLord
             On.EnemyDeathEffects.EmitEffects += No;
             On.EnemyDeathEffects.EmitCorpse += EmitCorpse;
             On.InfectedEnemyEffects.RecieveHitEffect += RecieveHit;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnDestroy2;
 
             _hm = gameObject.GetComponent<HealthManager>();
             _stunControl = gameObject.LocateMyFSM("Stun Control");
@@ -73,6 +75,8 @@ namespace LostLord
             _recoil = gameObject.GetComponent<Recoil>();
             _enemyEffects = gameObject.GetComponent<InfectedEnemyEffects>();
         }
+
+        private void OnDestroy2(Scene arg0, Scene arg1) => OnDestroy();
 
         private void RecieveHit(On.InfectedEnemyEffects.orig_RecieveHitEffect orig, InfectedEnemyEffects self, float attackdirection)
         {
@@ -122,6 +126,8 @@ namespace LostLord
         {
             if (!PlayerData.instance.infectedKnightDreamDefeated) return;
             if (!LostLord.Instance.IsInHall) return;
+            
+            Log(_changedKin);
 
             if (!_changedKin)
             {
@@ -327,6 +333,8 @@ namespace LostLord
             tk2dSpriteDefinition def = gameObject.GetComponent<tk2dSprite>().GetCurrentSpriteDef();
 
             def.material.mainTexture = _oldTex;
+
+            _changedKin = false;
         }
 
         private static void Log(object obj)
