@@ -6,11 +6,6 @@
         <Product>LostLord</Product>
         <Copyright>Copyright © 2018</Copyright>
         <OutputPath>bin\$(Configuration)\</OutputPath>
-        <PostBuildEvent>@echo on
-            SET MOD_DEST="D:\Steam\\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\"
-            echo Copying mod
-            copy $(TargetPath) %25MOD_DEST%25
-        </PostBuildEvent>
         <ReferencePath>..\..\..\References</ReferencePath>
     </PropertyGroup>
     <ItemGroup>
@@ -45,4 +40,9 @@
         <EmbeddedResource Include="pure.png"/>
         <EmbeddedResource Include="zProjSprite.png"/>
     </ItemGroup>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="@echo on"/>
+        <Exec Command="echo Copying mod"/>
+        <Exec Command='copy "$(TargetPath)" "D:\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\"'/>
+    </Target>
 </Project>
