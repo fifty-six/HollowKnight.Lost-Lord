@@ -50,11 +50,9 @@ namespace LostLord
                     continue;
                 }
                 
-                bool pureFIle = res.StartsWith("LostLord.pure") || res.StartsWith("LostLord.z");
+                bool pureFile = res.StartsWith("LostLord.pure") || res.StartsWith("LostLord.z");
                 
-                if (!GlobalSettings.Pure && pureFIle)
-                    continue;
-                if (GlobalSettings.Pure && !pureFIle)
+                if (GlobalSettings.Pure ? !pureFile : pureFile)
                     continue;
 
                 using (Stream s = asm.GetManifestResourceStream(res))

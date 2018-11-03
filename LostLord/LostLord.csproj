@@ -1,94 +1,48 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8F2B7FBB-BD69-49E9-BEA9-58B2F1913E30}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LostLord</RootNamespace>
-    <AssemblyName>LostLord</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <LangVersion>7</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\Mods\ModCommon.dll</HintPath>
-    </Reference>
-    <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\PlayMaker.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\References\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Extensions.cs" />
-    <Compile Include="FsmUtil.cs" />
-    <Compile Include="Kin.cs" />
-    <Compile Include="KinFinder.cs" />
-    <Compile Include="LordSettings.cs" />
-    <Compile Include="LostLord.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>@echo on
-      SET MOD_DEST="D:\Steam\\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\"
-      echo Copying mod
-      copy "$(TargetPath)" %25MOD_DEST%25</PostBuildEvent>
-  </PropertyGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="kinSprite.png" />
-    <EmbeddedResource Include="projSprite.png" />
-    <EmbeddedResource Include="pure.png" />
-      <EmbeddedResource Include="zProjSprite.png" />
-  </ItemGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
-    </Target>
-    <Target Name="AfterBuild">
-    </Target>
-    -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net35</TargetFramework>
+        <LangVersion>7</LangVersion>
+        <AssemblyTitle>LostLord</AssemblyTitle>
+        <Product>LostLord</Product>
+        <Copyright>Copyright © 2018</Copyright>
+        <OutputPath>bin\$(Configuration)\</OutputPath>
+        <PostBuildEvent>@echo on
+            SET MOD_DEST="D:\Steam\\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\"
+            echo Copying mod
+            copy $(TargetPath) %25MOD_DEST%25
+        </PostBuildEvent>
+        <ReferencePath>..\..\..\References</ReferencePath>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\Mods\ModCommon.dll</HintPath>
+        </Reference>
+        <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\PlayMaker.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\UnityEngine.AudioModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\UnityEngine.ImageConversionModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>..\..\..\References\UnityEngine.ParticleSystemModule.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="kinSprite.png"/>
+        <EmbeddedResource Include="projSprite.png"/>
+        <EmbeddedResource Include="pure.png"/>
+        <EmbeddedResource Include="zProjSprite.png"/>
+    </ItemGroup>
 </Project>

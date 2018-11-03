@@ -41,6 +41,8 @@ namespace LostLord
 
         private tk2dSpriteAnimator _anim;
 
+        private float[] _origFps;
+
         private Recoil _recoil;
 
         private InfectedEnemyEffects _enemyEffects;
@@ -140,8 +142,7 @@ namespace LostLord
                 _changedKin = true;
             }
 
-            // var ps = gameObject.FindGameObjectInChildren("Corpse Steam").GetComponent<ParticleSystemRenderer>();
-            // ps.material.color = Color.black;
+            _origFps = _origFps ?? _anim.Library.clips.Select(x => x.fps).ToArray();
 
             PlayMakerFSM corpse = gameObject.FindGameObjectInChildren("Corpse Infected Knight Dream(Clone)").LocateMyFSM("corpse");
 
@@ -189,7 +190,7 @@ namespace LostLord
 
             // 2x Damage
             _control.GetAction<SetDamageHeroAmount>("Roar End", 3).damageDealt.Value = 2;
-
+            
             // Increase Jump X
             _control.GetAction<FloatMultiply>("Aim Dstab", 3).multiplyBy = 5;
             _control.GetAction<FloatMultiply>("Aim Jump", 3).multiplyBy = 2.2f;
@@ -265,17 +266,9 @@ namespace LostLord
                 position = new Vector3(0, 0)
             }, 4);
 
-            var cm = new CallMethod
-            {
-                behaviour = this,
-                methodName = "StopCheese",
-                parameters = new FsmVar[0],
-                everyFrame = false
-            };
-
             foreach (string i in new[] {"Damage Response", "Attack Choice"})
             {
-                _control.InsertAction(i, cm, 0);
+                _control.InsertMethod(i, 0, StopCheese);
             }
 
             Log("fin.");
@@ -298,7 +291,9 @@ namespace LostLord
             if (!PlayerData.instance.infectedKnightDreamDefeated) return go;
 
             if (go.name != "IK Projectile DS(Clone)" && go.name != "Parasite Balloon Spawner(Clone)") return go;
-
+            
+            ObjectPool.RecycleAll(go);
+            
             foreach (DamageHero i in go.GetComponentsInChildren<DamageHero>(true))
             {
                 i.damageDealt = 2;
@@ -312,11 +307,11 @@ namespace LostLord
             };
 
             psr.material = m;
-
+            
             var sr = go.GetComponentInChildren<SpriteRenderer>(true);
 
             sr.sprite = LostLord.SPRITES[1];
-
+            
             return go;
         }
 
@@ -327,6 +322,13 @@ namespace LostLord
             On.EnemyDeathEffects.EmitEffects -= No;
             On.EnemyDeathEffects.EmitCorpse -= EmitCorpse;
             On.InfectedEnemyEffects.RecieveHitEffect -= RecieveHit;
+
+            if (_origFps == null) return;
+            
+            for (int i = 0; i < _origFps.Length; i++)
+            {
+                _anim.Library.clips[i].fps = _origFps[i];
+            }
 
             if (!_changedKin) return;
             
