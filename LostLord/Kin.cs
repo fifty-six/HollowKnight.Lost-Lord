@@ -52,6 +52,8 @@ namespace LostLord
         private PlayMakerFSM _control;
 
         private static bool _changedKin;
+
+        private static Sprite _headGlob;
         
         private Texture _oldTex;
 
@@ -286,21 +288,32 @@ namespace LostLord
             }
         }
 
-        private static GameObject Projectile(GameObject go)
+        private GameObject Projectile(GameObject go)
         {
-            if (!PlayerData.instance.infectedKnightDreamDefeated) return go;
+            if (go.name != "IK Projectile DS(Clone)") return go;
 
-            if (go.name != "IK Projectile DS(Clone)" && go.name != "Parasite Balloon Spawner(Clone)") return go;
-            
-            ObjectPool.RecycleAll(go);
-            
+            if (this == null)
+            {
+                var sre = go.GetComponentInChildren<SpriteRenderer>(true);
+
+                if (!string.IsNullOrEmpty(sre.sprite.name))
+                {
+                    ModHooks.Instance.ObjectPoolSpawnHook -= Projectile;
+                }
+
+                // Broken Vessel Fix
+                RevertProjectile(go);
+                
+                return go;
+            }
+
             foreach (DamageHero i in go.GetComponentsInChildren<DamageHero>(true))
             {
                 i.damageDealt = 2;
             }
 
             var psr = go.GetComponentInChildren<ParticleSystemRenderer>();
-
+            
             var m = new Material(psr.material)
             {
                 color = Color.black
@@ -309,15 +322,28 @@ namespace LostLord
             psr.material = m;
             
             var sr = go.GetComponentInChildren<SpriteRenderer>(true);
-
+            
+            // ReSharper disable once Unity.NoNullCoalescing
+            _headGlob = _headGlob ?? sr.sprite;
+            
             sr.sprite = LostLord.SPRITES[1];
             
             return go;
         }
 
+        private static void RevertProjectile(GameObject go)
+        {
+            var psr = go.GetComponentInChildren<ParticleSystemRenderer>();
+
+            psr.material.color = Color.white;
+            
+            var sr = go.GetComponentInChildren<SpriteRenderer>(true);
+
+            sr.sprite = _headGlob;
+        }
+
         private void OnDestroy()
         {
-            ModHooks.Instance.ObjectPoolSpawnHook -= Projectile;
             On.EnemyDeathEffects.EmitInfectedEffects -= OnEmitInfected;
             On.EnemyDeathEffects.EmitEffects -= No;
             On.EnemyDeathEffects.EmitCorpse -= EmitCorpse;

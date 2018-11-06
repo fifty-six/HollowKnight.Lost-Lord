@@ -1,25 +1,34 @@
-﻿using UnityEngine;
-using Logger = Modding.Logger;
+﻿using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace LostLord
 {
     internal class KinFinder : MonoBehaviour
     {
-        private GameObject _kin;
-
         private void Start()
         {
-            Logger.Log("[Lost Lord] Added KinFinder MonoBehaviour");
+            USceneManager.activeSceneChanged += SceneChanged;
         }
 
-        private void Update()
+        private void SceneChanged(Scene arg0, Scene arg1)
         {
-            if (!PlayerData.instance.infectedKnightDreamDefeated) return;
-            
-            if (_kin != null) return;
-            _kin = GameObject.Find("Lost Kin");
-            if (_kin == null) return;
-            _kin.AddComponent<Kin>();
+            if (arg1.name != "GG_Lost_Kin") return;
+
+            StartCoroutine(AddComponent());
+        }
+
+        private static IEnumerator AddComponent()
+        {
+            yield return null;
+
+            GameObject.Find("Lost Kin").AddComponent<Kin>();
+        }
+
+        private void OnDestroy()
+        {
+            USceneManager.activeSceneChanged -= SceneChanged;
         }
     }
 }

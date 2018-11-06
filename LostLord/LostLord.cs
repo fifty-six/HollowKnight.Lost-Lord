@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using JetBrains.Annotations;
+using ModCommon.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -78,11 +79,7 @@ namespace LostLord
 
         private void SetupSettings()
         {
-            string settingsFilePath = Application.persistentDataPath + ModHooks.PathSeperator + GetType().Name + ".GlobalSettings.json";
-
-            bool forceReloadGlobalSettings = GlobalSettings != null && GlobalSettings.SettingsVersion != LordSettings.SETTINGS_VER;
-
-            if (forceReloadGlobalSettings || !File.Exists(settingsFilePath))
+            if (!File.Exists(this.GetAttr<string>("_globalSettingsFilename")))
             {
                 GlobalSettings?.Reset();
             }
