@@ -10,7 +10,11 @@ namespace LostLord
 
             Pure = true;
         }
-        
-        public bool Pure { get => GetBool(); private set => SetBool(value); }
+
+        public bool Pure
+        {
+            get => GetBool();
+            private set => SetBool(value);
+        }
     }
 }

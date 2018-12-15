@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -38,21 +39,22 @@ namespace LostLord
             ModHooks.Instance.LanguageGetHook += LangGet;
             USceneManager.activeSceneChanged += LastScene;
 
-            int ind = 0;
+            int      ind = 0;
             Assembly asm = Assembly.GetExecutingAssembly();
-            
+
             LoadGlobalSettings();
-            
+
             foreach (string res in asm.GetManifestResourceNames())
             {
                 if (!res.EndsWith(".png"))
                 {
                     Log("Unknown resource: " + res);
+
                     continue;
                 }
-                
+
                 bool pureFile = res.StartsWith("LostLord.pure") || res.StartsWith("LostLord.z");
-                
+
                 if (GlobalSettings.Pure ? !pureFile : pureFile)
                     continue;
 
@@ -60,7 +62,6 @@ namespace LostLord
                 {
                     if (s == null) continue;
 
-                    
                     byte[] buffer = new byte[s.Length];
                     s.Read(buffer, 0, buffer.Length);
                     s.Dispose();
@@ -114,7 +115,9 @@ namespace LostLord
 
             // ReSharper disable once Unity.NoNullPropogation
             var x = GameManager.instance?.gameObject.GetComponent<KinFinder>();
+
             if (x == null) return;
+
             UObject.Destroy(x);
         }
     }

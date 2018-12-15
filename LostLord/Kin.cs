@@ -54,13 +54,13 @@ namespace LostLord
         private static bool _changedKin;
 
         private static Sprite _headGlob;
-        
+
         private Texture _oldTex;
 
         private void Awake()
         {
             Log("Added Kin MonoBehaviour");
-            
+
             if (!PlayerData.instance.infectedKnightDreamDefeated) return;
             if (!LostLord.Instance.IsInHall) return;
 
@@ -113,9 +113,11 @@ namespace LostLord
         private static void OnEmitInfected(On.EnemyDeathEffects.orig_EmitInfectedEffects orig, EnemyDeathEffects self)
         {
             self.EmitSound();
+
             if (self.GetAttr<GameObject>("corpse") != null)
             {
                 var component = self.GetAttr<GameObject>("corpse").GetComponent<SpriteFlash>();
+
                 if (component != null)
                 {
                     component.FlashShadowRecharge();
@@ -130,7 +132,7 @@ namespace LostLord
         {
             if (!PlayerData.instance.infectedKnightDreamDefeated) return;
             if (!LostLord.Instance.IsInHall) return;
-            
+
             Log(_changedKin);
 
             if (!_changedKin)
@@ -138,7 +140,7 @@ namespace LostLord
                 tk2dSpriteDefinition def = gameObject.GetComponent<tk2dSprite>().GetCurrentSpriteDef();
 
                 _oldTex = def.material.mainTexture;
-                
+
                 def.material.mainTexture = LostLord.SPRITES[0].texture;
 
                 _changedKin = true;
@@ -192,7 +194,7 @@ namespace LostLord
 
             // 2x Damage
             _control.GetAction<SetDamageHeroAmount>("Roar End", 3).damageDealt.Value = 2;
-            
+
             // Increase Jump X
             _control.GetAction<FloatMultiply>("Aim Dstab", 3).multiplyBy = 5;
             _control.GetAction<FloatMultiply>("Aim Jump", 3).multiplyBy = 2.2f;
@@ -214,17 +216,17 @@ namespace LostLord
             _control.GetAction<ActivateGameObject>("Dstab Fall", 6).activate = false;
 
             // Combo Dash into Upslash followed by Dstab's Projectiles.
-            _control.CopyState("Dstab Land", "Spawners");
+            _control.CopyState("Dstab Land",     "Spawners");
             _control.CopyState("Ohead Slashing", "Ohead Combo");
-            _control.CopyState("Dstab Recover", "Dstab Recover 2");
+            _control.CopyState("Dstab Recover",  "Dstab Recover 2");
 
             _control.ChangeTransition("Dash Recover", "FINISHED", "Ohead Combo");
 
             _control.RemoveAnim("Dash Recover", 3);
-            _control.RemoveAnim("Spawners", 3);
+            _control.RemoveAnim("Spawners",     3);
 
             _control.ChangeTransition("Ohead Combo", "FINISHED", "Spawners");
-            _control.ChangeTransition("Spawners", "FINISHED", "Dstab Recover 2");
+            _control.ChangeTransition("Spawners",    "FINISHED", "Dstab Recover 2");
             _control.GetAction<Wait>("Dstab Recover 2", 0).time = 0f;
 
             List<FsmStateAction> a = _control.GetState("Dstab Fall").Actions.ToList();
@@ -240,7 +242,7 @@ namespace LostLord
 
             // Dstab => Upslash
             _control.CopyState("Ohead Slashing", "Ohead Combo 2");
-            _control.ChangeTransition("Dstab Land", "FINISHED", "Ohead Combo 2");
+            _control.ChangeTransition("Dstab Land",    "FINISHED", "Ohead Combo 2");
             _control.ChangeTransition("Ohead Combo 2", "FINISHED", "Dstab Recover");
 
             // Aerial Dash => Dstab
@@ -257,10 +259,7 @@ namespace LostLord
             _control.RemoveAction("Cheese Jump", 4);
             _control.InsertAction("Cheese Jump", new FireAtTarget
             {
-                gameObject = new FsmOwnerDefault
-                {
-                    GameObject = gameObject
-                },
+                gameObject = new FsmOwnerDefault {GameObject = gameObject},
                 target = HeroController.instance.gameObject,
                 speed = 100f,
                 everyFrame = false,
@@ -303,7 +302,7 @@ namespace LostLord
 
                 // Broken Vessel Fix
                 RevertProjectile(go);
-                
+
                 return go;
             }
 
@@ -313,21 +312,18 @@ namespace LostLord
             }
 
             var psr = go.GetComponentInChildren<ParticleSystemRenderer>();
-            
-            var m = new Material(psr.material)
-            {
-                color = Color.black
-            };
+
+            var m = new Material(psr.material) {color = Color.black};
 
             psr.material = m;
-            
+
             var sr = go.GetComponentInChildren<SpriteRenderer>(true);
-            
+
             // ReSharper disable once Unity.NoNullCoalescing
             _headGlob = _headGlob ?? sr.sprite;
-            
+
             sr.sprite = LostLord.SPRITES[1];
-            
+
             return go;
         }
 
@@ -336,7 +332,7 @@ namespace LostLord
             var psr = go.GetComponentInChildren<ParticleSystemRenderer>();
 
             psr.material.color = Color.white;
-            
+
             var sr = go.GetComponentInChildren<SpriteRenderer>(true);
 
             sr.sprite = _headGlob;
@@ -350,14 +346,14 @@ namespace LostLord
             On.InfectedEnemyEffects.RecieveHitEffect -= RecieveHit;
 
             if (_origFps == null) return;
-            
+
             for (int i = 0; i < _origFps.Length; i++)
             {
                 _anim.Library.clips[i].fps = _origFps[i];
             }
 
             if (!_changedKin) return;
-            
+
             tk2dSpriteDefinition def = gameObject.GetComponent<tk2dSprite>().GetCurrentSpriteDef();
 
             def.material.mainTexture = _oldTex;
