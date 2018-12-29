@@ -216,17 +216,17 @@ namespace LostLord
             _control.GetAction<ActivateGameObject>("Dstab Fall", 6).activate = false;
 
             // Combo Dash into Upslash followed by Dstab's Projectiles.
-            _control.CopyState("Dstab Land",     "Spawners");
+            _control.CopyState("Dstab Land", "Spawners");
             _control.CopyState("Ohead Slashing", "Ohead Combo");
-            _control.CopyState("Dstab Recover",  "Dstab Recover 2");
+            _control.CopyState("Dstab Recover", "Dstab Recover 2");
 
             _control.ChangeTransition("Dash Recover", "FINISHED", "Ohead Combo");
 
             _control.RemoveAnim("Dash Recover", 3);
-            _control.RemoveAnim("Spawners",     3);
+            _control.RemoveAnim("Spawners", 3);
 
             _control.ChangeTransition("Ohead Combo", "FINISHED", "Spawners");
-            _control.ChangeTransition("Spawners",    "FINISHED", "Dstab Recover 2");
+            _control.ChangeTransition("Spawners", "FINISHED", "Dstab Recover 2");
             _control.GetAction<Wait>("Dstab Recover 2", 0).time = 0f;
 
             List<FsmStateAction> a = _control.GetState("Dstab Fall").Actions.ToList();
@@ -242,7 +242,7 @@ namespace LostLord
 
             // Dstab => Upslash
             _control.CopyState("Ohead Slashing", "Ohead Combo 2");
-            _control.ChangeTransition("Dstab Land",    "FINISHED", "Ohead Combo 2");
+            _control.ChangeTransition("Dstab Land", "FINISHED", "Ohead Combo 2");
             _control.ChangeTransition("Ohead Combo 2", "FINISHED", "Dstab Recover");
 
             // Aerial Dash => Dstab

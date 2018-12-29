@@ -39,11 +39,13 @@ namespace LostLord
             ModHooks.Instance.LanguageGetHook += LangGet;
             USceneManager.activeSceneChanged += LastScene;
 
-            int      ind = 0;
+            int ind = 0;
             Assembly asm = Assembly.GetExecutingAssembly();
 
             LoadGlobalSettings();
 
+            var timer = new Stopwatch();
+            timer.Start();
             foreach (string res in asm.GetManifestResourceNames())
             {
                 if (!res.EndsWith(".png"))
@@ -68,7 +70,7 @@ namespace LostLord
 
                     // Create texture from bytes
                     var tex = new Texture2D(1, 1);
-                    tex.LoadImage(buffer);
+                    tex.LoadImage(buffer, true);
 
                     // Create sprite from texture
                     SPRITES.Add(Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f)));
@@ -76,6 +78,8 @@ namespace LostLord
                     Log("Created sprite from embedded image: " + res + " at ind " + ++ind);
                 }
             }
+            timer.Stop();
+            Log("Loaded images in " + timer.Elapsed);
         }
 
         private void SetupSettings()
